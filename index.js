@@ -17,6 +17,7 @@ app.use(express.urlencoded({
     extended: true
 }));
 
+//hi
 // connect to mongoose
 mongoose.set('strictQuery', true);
 mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/foodsavvy",)
@@ -30,7 +31,10 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
             try {
                 //check if email taken
                 let query = { uemail: req.body.uemail };
+                console.log(query);
+                console.log(req.body);
                 let emailCheck = await User.findOne(query);
+                console.log(emailCheck);
                 if (emailCheck.uemail == req.body.uemail) {
                     console.log("Email Taken")
                     res.status(205).json(userData);
