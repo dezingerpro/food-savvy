@@ -31,11 +31,11 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
             try {
                 //check if email taken
                 let query = { uemail: req.body.uemail };
-                console.log(query);
-                console.log(req.body);
                 let emailCheck = await User.findOne(query);
+                console.log(req.body.uemail);
+                console.log("HELLO");
                 console.log(emailCheck);
-                if (emailCheck.uemail == req.body.uemail) {
+                if (emailCheck!=null) {
                     console.log("Email Taken")
                     res.status(205).json(userData);
                 }else{
@@ -44,9 +44,6 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 }
             } catch (error) {
                 console.log(error);
-                console.log(query);
-                console.log(req.body.uemail);
-                console.log(emailCheck);
                 res.status(400).json({
                     'status': error.message
                 })
