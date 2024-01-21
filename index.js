@@ -44,6 +44,9 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 }
             } catch (error) {
                 console.log(error);
+                console.log(query);
+                console.log(req.body.uemail);
+                console.log(emailCheck);
                 res.status(400).json({
                     'status': error.message
                 })
