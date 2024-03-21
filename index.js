@@ -381,6 +381,37 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
 
         });
 
+        //get ingredients detailed
+        app.post('/api/get_ingredient_details', async (req, res) => {
+            const { ingredientName } = req.body;
+            console.log(ingredientName);
+            if (!ingredientName) {
+              return res.status(400).send({ message: 'Ingredient name is required.' });
+            }
+          
+            try {
+              // Adjusted to match your schema field 'iname' for ingredient name
+              const ingredient = await Ingredient.findOne({ iname: ingredientName });
+              console.log(ingredient);
+          
+              if (!ingredient) {
+                return res.status(404).send({ message: 'Ingredient not found.' });
+              }
+          
+              // Adjust the response as necessary, based on what details you want to send back
+              res.status(200).send({
+                _id: ingredient.id,
+                iname: ingredient.iname,
+                iimage: ingredient.iimage,
+                istock: ingredient.istock,
+                iprice: ingredient.iprice,
+              });
+            } catch (error) {
+              console.error('Error fetching ingredient details:', error);
+              res.status(500).send({ message: 'Error fetching ingredient details.' });
+            }
+          });
+
         //add recipes
         app.post("/api/add_recipe", async (req, res) => {
             console.log("Result", req.body);
