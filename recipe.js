@@ -28,6 +28,10 @@ let recipeSchema = new mongoose.Schema({
     rlink: {
         required: true,
         type: String
+    },
+    rtype: {
+        required: true,
+        type: String
     }
 });
 

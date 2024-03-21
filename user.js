@@ -24,7 +24,18 @@ let userSchema = new mongoose.Schema({
     'isAdmin': {
         type: Boolean,
         required: true
-    }
+    },
+    lastViewedRecipes: [
+        { 
+            type: String, maxItems: 5
+        }
+    ],
+    ucart: [
+        {
+          ingredientName: String,
+          quantity: Number
+        }
+      ]
 });
 
 const User = mongoose.model("user",userSchema);

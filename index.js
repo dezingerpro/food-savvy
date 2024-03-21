@@ -12,11 +12,17 @@ app.listen(2000, () => {
     console.log("Conected to server at 2000");
 })
 
+
+const bodyParser = require('body-parser');
+const spawn = require("child_process").spawn;
+
+
 app.use(express.json());
 app.use(express.urlencoded({
     extended: true
 }));
 
+//hi
 // connect to mongoose
 mongoose.set('strictQuery', true);
 mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/foodsavvy",)
@@ -31,10 +37,13 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 //check if email taken
                 let query = { uemail: req.body.uemail };
                 let emailCheck = await User.findOne(query);
-                if (emailCheck.uemail == req.body.uemail) {
+                console.log(req.body.uemail);
+                console.log("HELLO");
+                console.log(emailCheck);
+                if (emailCheck != null) {
                     console.log("Email Taken")
                     res.status(205).json(userData);
-                }else{
+                } else {
                     const userData = await User.create(req.body);
                     res.status(200).json(userData);
                 }
@@ -125,10 +134,10 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 else {
                     console.log(answer);
                     console.log(user.uanswer);
-                    if(answer==user.uanswer){
+                    if (answer == user.uanswer) {
                         res.status(200).json(user);
                     }
-                    else{
+                    else {
                         res.status(205);
                     }
                 }
@@ -165,17 +174,183 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
 
         //get all recipes
         app.post("/api/get_allrecipe", async (req, res) => {
-
             try {
                 let data = await Recipes.find();
+                //console.log(data);
                 res.status(200).json(data);
-                console.log(data);
-
             } catch (error) {
                 res.status(500).json(error.message)
             }
 
         });
+
+        // Endpoint to update the last viewed recipe
+        app.post('/api/updateLastViewed', async (req, res) => {
+            const { userId, lastViewedRecipes } = req.body;
+
+            if (!userId || !lastViewedRecipes) {
+                return res.status(400).send('User ID and last viewed recipes are required.');
+            }
+
+            try {
+                const user = await User.findByIdAndUpdate(userId, {
+                    $set: {
+                        lastViewedRecipes: lastViewedRecipes
+                    }
+                });
+                console.log(user);
+                res.status(200).send('Last viewed recipes updated successfully.');
+                
+            } catch (error) {
+                console.error('Error updating last viewed recipes:', error);
+                res.status(500).send(error.message);
+            }
+        });
+
+        app.post('/api/getLastViewedRecipes', async (req, res) => {
+            //console.log(req.body);
+            const { userId } = req.body;
+            //console.log(userId);
+          
+            if (!userId) {
+                console.log('User ID is required.')
+              return res.status(400).send('User ID is required.');
+            }
+          
+            try {
+              // Convert the userId to a valid ObjectId
+              const validUserId = new mongoose.Types.ObjectId(userId);
+              //console.log(validUserId);
+              const user = await User.findById(validUserId);
+              //console.log(user);
+          
+              if (!user) {
+                console.log('User not found.');
+                return res.status(404).send('User not found.');
+              }
+          
+              res.status(200).json({ lastViewedRecipes: user.lastViewedRecipes || [] });
+            } catch (error) {
+              console.error('Error fetching last viewed recipes:', error);
+              res.status(500).send(error.message);
+            }
+          });
+
+          //recommend RECIPES PYTHON
+          app.post('/api/recommended_recipes', (req, res) => {
+            // Extract userId from the request body
+            const { userId } = req.body;
+          
+            //console.log(userId);
+            // Check if userId is provided
+            if (!userId) {
+              return res.status(400).json({ error: 'UserId is required' });
+            }
+          
+            // Spawn a child process to run the Python script
+            const pythonProcess = spawn('python', ['./recommended_recipes.py', userId]);
+          
+            // Collect data from script
+            let dataString = '';
+            pythonProcess.stdout.on('data', function(data) {
+              dataString += data.toString();
+            });
+          
+            // Handle script completion
+            pythonProcess.on('close', (code) => {
+              //console.log(`Child process closed with code ${code}`);
+              if (code !== 0) {
+                return res.status(500).json({ error: 'Failed to generate recommendations' });
+              }
+          
+              // Parse the Python script's output and send as JSON
+              try {
+                const recommendations = JSON.parse(dataString.trim());
+                //console.log(recommendations);
+                res.json(recommendations);
+              } catch (error) {
+                console.error('Failed to parse recommendations:', error);
+                res.status(500).json({ error: 'Failed to parse recommendations' });
+              }
+            });
+          
+            // Handle errors in the Python script
+            pythonProcess.stderr.on('data', (data) => {
+                console.error(`Error from Python script: ${data.toString()}`);
+              console.error(`stderr: ${data}`);
+            });
+          
+            pythonProcess.on('error', (error) => {
+                console.log(`Raw output from Python script: ${dataString}`);
+              console.error(`Failed to start subprocess: ${error}`);
+              res.status(500).json({ error: 'Failed to start subprocess' });
+            });
+          });
+
+        //pythoncodetosearch
+        app.post('/api/search_recipes', (req, res) => {
+            const ingredients = req.body.ingredients;
+            const pythonProcess = spawn('python', ['./ingredientSearch.py', ingredients]);
+            let dataString = '';
+            //console.log(pythonProcess);
+
+            pythonProcess.stdout.on('data', (data) => {
+                dataString += data.toString();
+            });
+
+            console.log(dataString);
+
+            pythonProcess.on('error', (error) => {
+                console.error(`Error executing Python script: ${error}`);
+                res.status(500).send("Error executing Python script");
+            });
+
+            pythonProcess.on('close', (code) => {
+                console.log(`Python script exited with code ${code}`);
+                const output = JSON.parse(dataString);  // Parse the output string as JSON
+                //console.log(output.recommended_recipes);  // Access the recommended recipes
+                res.json(output);  // Send the output as JSON
+            });
+        });
+
+
+        //savecart
+        app.post("/api/saveUserCart", async (req, res) => {
+            const { userId, ucart } = req.body;
+            if (!userId || !ucart) {
+              return res.status(400).send("Missing userId or cart data.");
+            }
+            try {
+              const user = await User.findById(userId);
+              if (!user) {
+                return res.status(404).send("User not found.");
+              }
+              user.ucart = ucart; // Update the user's cart
+              await user.save(); // Save the updated user document
+              console.log(user);
+              res.send("Cart updated successfully.");
+            } catch (error) {
+              console.error(error);
+              res.status(500).send("An error occurred while updating the cart.");
+            }
+          });
+
+        //fetch cart
+        app.get("/api/getUserCart/:userId", async (req, res) => {
+            const { userId } = req.params;
+            try {
+              const user = await User.findById(userId, "ucart"); // Select only the ucart field
+              if (!user) {
+                return res.status(404).send("User not found.");
+              }
+          
+              res.json(user.ucart); // Send the user's cart data
+            } catch (error) {
+              console.error(error);
+              res.status(500).send("An error occurred while fetching the cart.");
+            }
+          });
+
 
         //get main_ingredients
         app.post("/api/get_maining", async (req, res) => {
@@ -183,7 +358,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
             try {
                 let data = await MainIng.find();
                 res.status(200).json(data);
-                console.log(data);
+                //console.log(data);
 
             } catch (error) {
                 res.status(500).json(error.message)
@@ -198,7 +373,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 let data = await Ingredient.find();
                 res.status(200).json(data);
                 //print(res.json(data));
-                console.log(data);
+                //console.log(data);
 
             } catch (error) {
                 res.status(500).json(error.message)
@@ -212,7 +387,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
             try {
                 req.body.ringredients = JSON.parse(req.body.ringredients);
                 const recipeData = await Recipes.create(req.body);
-                console.log(recipeData);
+                //console.log(recipeData);
                 res.status(200).json(recipeData);
             } catch (error) {
                 console.log(error);
