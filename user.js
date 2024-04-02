@@ -1,17 +1,33 @@
 const mongoose = require("mongoose");
 
 let userSchema = new mongoose.Schema({
-    'uname':{
+    'uname': {
         required: true,
         type: String
     },
-    'uemail':{
+    'uemail': {
         required: true,
         type: String
     },
-    'upass':{
+    'upass': {
         required: true,
         type: String
+    },
+    'umobile': { // New field for mobile number
+        type: String,
+        required: true
+    },
+    'ucity': { // New field for city
+        type: String,
+        required: true
+    },
+    'ustreet': { // New field for street address
+        type: String,
+        required: true
+    },
+    'uhouse': { // New field for house details
+        type: String,
+        required: true
     },
     'usecurityQuestion': {
         type: String,
@@ -25,18 +41,22 @@ let userSchema = new mongoose.Schema({
         type: Boolean,
         required: true
     },
-    lastViewedRecipes: [
+    uorder: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order'
+    }],
+    lastViewedRecipes: [ // Assuming this remains unchanged
         { 
             type: String, maxItems: 5
         }
     ],
-    ucart: [
+    ucart: [ // Assuming this remains unchanged
         {
           ingredientName: String,
           quantity: Number
         }
-      ]
+    ]
 });
 
-const User = mongoose.model("user",userSchema);
+const User = mongoose.model("user", userSchema);
 module.exports = User;
