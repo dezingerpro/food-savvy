@@ -39,8 +39,6 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 let query = { uemail: req.body.uemail };
                 let emailCheck = await User.findOne(query);
                 console.log(req.body.uemail);
-                console.log("HELLO");
-                console.log(emailCheck);
                 if (emailCheck != null) {
                     console.log("Email Taken")
                     res.status(205).json(userData);

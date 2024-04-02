@@ -19,15 +19,12 @@ let userSchema = new mongoose.Schema({
     },
     'ucity': { // New field for city
         type: String,
-        required: true
     },
     'ustreet': { // New field for street address
         type: String,
-        required: true
     },
     'uhouse': { // New field for house details
         type: String,
-        required: true
     },
     'usecurityQuestion': {
         type: String,
