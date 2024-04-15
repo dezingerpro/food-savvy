@@ -32,7 +32,8 @@ let recipeSchema = new mongoose.Schema({
     rtype: {
         required: true,
         type: String
-    }
+    },
+    allergens: [String]
 });
 
 const Recipes = mongoose.model("recipes", recipeSchema);

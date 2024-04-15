@@ -6,6 +6,8 @@ const MainIng = require("./mainingredient");
 const Question = require("./security_questions");
 const Recipes = require("./recipe");
 const Ingredient = require("./ingredients");
+const Rating = require("./ratings");
+const Allergen = require("./allergen");
 const app = express();
 const userData = [];
 
@@ -69,8 +71,10 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                     res.status(403).json(user);
                 }
                 else if (pass == user.upass) {
-                    //console.log("Everything is ok")
-                    res.status(401).json(user);
+                    console.log("Everything is ok")
+                    var ingredients = await fetchUserCartIngredients(user._id);
+                    console.log(ingredients);
+                    res.status(401).json({ user: user, ingredients: ingredients });
                 } else {
                     //console.log("Password is not ok")
                     res.status(402).json(user);
@@ -96,7 +100,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
         });
 
         //update user id
-        app.put('/api/user/:id', async (req, res) => {
+        app.patch('/api/user/:id', async (req, res) => {
             try {
                 const { id } = req.params;
                 const updateData = req.body;
@@ -183,6 +187,45 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 res.status(500).send('Error fetching orders: ' + error.message);
             }
         });
+
+        // POST endpoint for submitting a recipe rating
+        app.post('/api/add_ratings', async (req, res) => {
+            try {
+                const { recipeId, userId, rating, review } = req.body;
+                // Validate input, ensure required fields are provided
+                if (!recipeId || !userId || rating === undefined) {
+                    return res.status(400).json({ message: 'Missing required fields' });
+                }
+                // Create and save the new rating
+                const newRating = new Rating({ recipeId, userId, rating, review });
+                await newRating.save();
+                // save in user 
+                await User.findByIdAndUpdate(userId, { $push: { uratings: newRating._id } });
+
+                res.status(201).json(newRating);
+
+            } catch (error) {
+                res.status(500).json({ message: 'Error saving recipe rating', error: error.message });
+            }
+        });
+
+        // fetch ratings as per recipe
+        app.get('/api/get_ratings', async (req, res) => {
+            try {
+              const { recipeId } = req.query; // Assuming you pass recipeId as a query parameter
+                console.log(recipeId);
+              if (!recipeId) {
+                return res.status(400).json({ message: 'Recipe ID is required' });
+              }
+          
+              const ratings = await Rating.find({ recipeId }).populate('userId', 'uname'); // Assuming 'userId' references a User model with a 'username' field
+              console.log(ratings);
+              res.status(200).json(ratings);
+            } catch (error) {
+              console.error('Failed to fetch ratings:', error);
+              res.status(500).json({ message: 'Failed to fetch ratings', error: error.message });
+            }
+          });
 
         //forgot password
         app.post("/api/forgot_password", async (req, res) => {
@@ -299,7 +342,6 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                         lastViewedRecipes: lastViewedRecipes
                     }
                 });
-                console.log(user);
                 res.status(200).send('Last viewed recipes updated successfully.');
 
             } catch (error) {
@@ -572,6 +614,174 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
     ).catch((err) => {
         console.error(err);
     });
+
+    // Add Ingredient
+    app.post('/api/add_ingredient', async (req, res) => {
+        const { _id, ...ingredientData } = req.body; 
+        try {
+          const ingredient = new Ingredient(ingredientData);
+          await ingredient.save();
+          res.status(201).json({
+            message: "Ingredient added successfully",
+            ingredient: ingredient
+          });
+        } catch (error) {
+          console.error('Error adding ingredient:', error);
+          res.status(400).send({
+            message: "Error adding ingredient",
+            error: error.message
+          });
+        }
+      });
+  
+  // Update Ingredient
+  app.patch('/api/update_ingredient/:id', async (req, res) => {
+    try {
+      const ingredient = await Ingredient.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      if (!ingredient) {
+        return res.status(404).send();
+      }
+      res.send(ingredient);
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  });
+  
+  // Delete Ingredient
+  app.delete('/api/delete_ingredient/:id', async (req, res) => {
+    try {
+      const ingredient = await Ingredient.findByIdAndDelete(req.params.id);
+      if (!ingredient) {
+        return res.status(404).send();
+      }
+      res.send(ingredient);
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  });
+
+  //ANALYSE RECIPES
+  app.post('/api/analyze-recipes', async (req, res) => {
+    try {
+        console.log("HERE");
+      await analyzeAndUpdateRecipes(); // This function is defined in the previous example
+      res.status(200).send('Re-analysis of recipes completed successfully.');
+    } catch (error) {
+      console.error('Failed to re-analyze recipes:', error);
+      res.status(500).send('Error re-analyzing recipes');
+    }
+  });
+
+  async function getAllergensMap() {
+    const allergens = await Allergen.find();
+    const allergenMap = new Map();
+  
+    allergens.forEach(allergen => {
+      allergen.ingredients.forEach(ingredient => {
+        if (!allergenMap.has(ingredient)) {
+          allergenMap.set(ingredient, []);
+        }
+        allergenMap.get(ingredient).push(allergen.allergen);
+      });
+    });
+  
+    return allergenMap;
+  }
+  
+  async function analyzeAndUpdateRecipes() {
+    const allergenMap = await getAllergensMap();
+    const recipes = await Recipes.find();
+  
+    const updatePromises = recipes.map(async (recipe) => {
+      const currentAllergens = new Set(recipe.allergens || []);
+  
+      recipe.ringredients.forEach(ingredientObj => {
+        const ingredientName = ingredientObj.ingredientName;
+        if (allergenMap.has(ingredientName)) {
+          allergenMap.get(ingredientName).forEach(allergen => {
+            currentAllergens.add(allergen);
+          });
+        }
+      });
+  
+      // Only update the database if new allergens are identified
+      if (recipe.allergens?.length !== currentAllergens.size) {
+        return Recipes.updateOne({ _id: recipe._id }, { $set: { allergens: Array.from(currentAllergens) } });
+      }
+    });
+  
+    // Wait for all updates to complete
+    await Promise.all(updatePromises);
+    console.log('Allergy analysis and updates completed.');
+  }
+  
+  
+  
+  // API endpoint to fetch all allergens
+app.get('/api/get_allergens', async (req, res) => {
+    try {
+      const allergens = await Allergen.find({});
+      res.status(200).json(allergens);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Update uCart
+app.post('/api/updateCart', async (req, res) => {
+    const { userId, ucart } = req.body; // cartItems is an array of { id: ingredientId, qty: quantity }
+    console.log(userId, ucart);
+    try {
+      await User.findByIdAndUpdate(userId, { $set: { ucart: ucart } });
+      console.log("HELLO");
+      res.json({ success: true, message: "Cart updated successfully" });
+    } catch (error) {
+    console.log(error);
+      res.status(500).json({ success: false, message: "Error updating cart" });
+    }
+  });
+  
+  // Fetch Cart Contents
+  app.get('/api/getCart/:userId', async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+  
+      const ingredientIds = user.ucart.map(item => item.id);
+      // Assuming you have a model called Ingredient to fetch ingredient details
+      const ingredients = await Ingredient.find({ '_id': { $in: ingredientIds } });
+  
+      // Merge quantity information
+      const cartContents = ingredients.map(ingredient => {
+        const quantity = user.ucart.find(item => item.id === ingredient._id.toString()).qty;
+        return { ...ingredient._doc, quantity };
+      });
+  
+      res.json({ success: true, cartContents });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Error fetching cart contents" });
+    }
+  });
+
+  async function fetchUserCartIngredients(userId) {
+    try {
+      const user = await User.findById(userId).exec();
+      if (!user || !user.ucart) {
+        return []; // Return empty array if user or cart not found
+      }
+      const ingredientIds = user.ucart.map(cartItem => cartItem.id);
+      const ingredients = await Ingredient.find({ '_id': { $in: ingredientIds } }).exec();
+
+      return ingredients; // Returns the fetched ingredients
+    } catch (error) {
+      console.error('Error fetching cart ingredients:', error);
+      return []; // Return empty array in case of error
+    }
+  }
+  
+  
 
 
 // mongodb+srv://<abiali>:<csgo5253>@foodsavvy.6erqsvj.mongodb.net/?retryWrites=true&w=majority

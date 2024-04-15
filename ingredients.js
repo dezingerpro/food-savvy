@@ -17,6 +17,12 @@ const ingredientSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  quantityType: {
+    type: String,
+    required: true,
+    enum: ['Liters', 'Milliliters', 'Grams', 'Kilograms', 'Tablespoons', 'Cups', 'Pieces', 'Others'],
+    default: 'Pieces', // Optional: set a default value if applicable
+  },
 });
 
 const IngredientModel = mongoose.model('Ingredient', ingredientSchema);

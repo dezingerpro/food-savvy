@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 
 let userSchema = new mongoose.Schema({
+    'id':{
+        type: mongoose.Schema.Types.ObjectId,
+    },
     'uname': {
         required: true,
         type: String
@@ -38,22 +41,35 @@ let userSchema = new mongoose.Schema({
         type: Boolean,
         required: true
     },
-    uorder: [{
+    'uorder': [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Order'
     }],
-    lastViewedRecipes: [ // Assuming this remains unchanged
+    'lastViewedRecipes': [ // Assuming this remains unchanged
         { 
             type: String, maxItems: 5
         }
     ],
-    ucart: [ // Assuming this remains unchanged
+    'ucart': [ // Assuming this remains unchanged
         {
-          ingredientName: String,
-          quantity: Number
+            id: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'IngredientModel' }, // Assuming 'id' references another collection
+          'ingredientName': String,
+          'quantity': Number,
+          _id: false
         }
-    ]
+    ],
+    'uratings': [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Rating'
+    }],
+    'allergies': [{ // New field for allergies
+        type: String
+    }],
+    'savedRecipes': [{ // New field for saved recipe IDs
+        type: mongoose.Schema.Types.ObjectId, // Assuming recipes are stored in another collection
+        ref: 'Recipes'
+    }]
 });
 
-const User = mongoose.model("user", userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User;
