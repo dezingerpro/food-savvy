@@ -13,7 +13,7 @@ def fetch_recipes(api_url):
     else:
         print(f"Failed to fetch recipes: Status Code {response.status_code}")
         return []
-        
+
 api_url = 'http://192.168.18.108:2000/api/get_allrecipe'
 recipes_data = fetch_recipes(api_url)
 

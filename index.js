@@ -142,6 +142,19 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
             }
         });
 
+        // Fetch recipe by ID
+        app.get('/api/single_recipes/:id', async (req, res) => {
+            try {
+                const recipe = await Recipes.findById(req.params.id);
+                if (!recipe) {
+                    return recipe.status(404).send('Recipe not found');
+                }
+                res.send(recipe);
+            } catch (error) {
+                res.status(500).send('Error fetching Recipe');
+            }
+        });
+
         //get orders
         app.get('/api/get_orders', async (req, res) => {
             try {
