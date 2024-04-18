@@ -1,9 +1,29 @@
 const mongoose = require("mongoose");
 
-// Define a schema for the ingredients
 const ingredientSchema = new mongoose.Schema({
-    ingredientName: String,
-    quantity: String,
+    ingredientName: {
+        type: String,
+        required: true,  // Assuming ingredient name is required
+        default: 'Unknown'
+    },
+    quantity: {
+        type: String,
+        default: '0'
+    },
+    qtytype: {
+        type: String,
+        default: 'units'  // Provide a default measurement unit
+    },
+    extra: {
+        type: String,
+        default: ''       // Allow for additional details with a safe default
+    },
+    secondaryName: {
+        type: String,
+        default: ''       // Handle secondary names or alternative identifiers
+    }
+}, {
+    timestamps: true  // Optional: Adds createdAt and updatedAt timestamps
 });
 
 // Define the main recipe schema using the ingredientSchema
