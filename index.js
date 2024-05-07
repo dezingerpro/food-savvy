@@ -422,7 +422,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 // Parse the Python script's output and send as JSON
                 try {
                     const recommendations = JSON.parse(dataString.trim());
-                    //console.log(recommendations);
+                    console.log(recommendations);
                     res.json(recommendations);
                 } catch (error) {
                     console.error('Failed to parse recommendations:', error);

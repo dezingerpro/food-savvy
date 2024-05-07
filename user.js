@@ -47,7 +47,7 @@ let userSchema = new mongoose.Schema({
     }],
     'lastViewedRecipes': [ // Assuming this remains unchanged
         { 
-            type: String, maxItems: 5
+            type: String, maxItems: 10
         }
     ],
     'ucart': [ // Assuming this remains unchanged
