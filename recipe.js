@@ -49,6 +49,7 @@ let recipeSchema = new mongoose.Schema({
         required: true,
         type: String
     },
+    rinstructions: [String],
     rtype: {
         required: true,
         type: String

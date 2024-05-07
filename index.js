@@ -355,6 +355,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                         lastViewedRecipes: lastViewedRecipes
                     }
                 });
+                console.log("SET");
                 res.status(200).send('Last viewed recipes updated successfully.');
 
             } catch (error) {
@@ -385,6 +386,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                     return res.status(404).send('User not found.');
                 }
 
+                console.log(user.lastViewedRecipes);
                 res.status(200).json({ lastViewedRecipes: user.lastViewedRecipes || [] });
             } catch (error) {
                 console.error('Error fetching last viewed recipes:', error);
@@ -404,7 +406,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
             }
 
             // Spawn a child process to run the Python script
-            const pythonProcess = spawn('python', ['./recommended_recipes.py', userId]);
+            const pythonProcess = spawn('python3', ['./recommended_recipes.py', userId]);
 
             // Collect data from script
             let dataString = '';
@@ -422,7 +424,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
                 // Parse the Python script's output and send as JSON
                 try {
                     const recommendations = JSON.parse(dataString.trim());
-                    console.log(recommendations);
+                    //console.log(recommendations);
                     res.json(recommendations);
                 } catch (error) {
                     console.error('Failed to parse recommendations:', error);
@@ -446,7 +448,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
         //pythoncodetosearch
         app.post('/api/search_recipes', (req, res) => {
             const ingredients = req.body.ingredients;
-            const pythonProcess = spawn('python', ['./ingredientSearch.py', ingredients]);
+            const pythonProcess = spawn('python3', ['./ingredientSearch.py', ingredients]);
             let dataString = '';
             //console.log(pythonProcess);
 

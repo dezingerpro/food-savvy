@@ -45,12 +45,12 @@ let userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Order'
     }],
-    'lastViewedRecipes': [ // Assuming this remains unchanged
+    'lastViewedRecipes': [ 
         { 
             type: String, maxItems: 10
         }
     ],
-    'ucart': [ // Assuming this remains unchanged
+    'ucart': [ 
         {
             id: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'IngredientModel' }, // Assuming 'id' references another collection
           'ingredientName': String,
