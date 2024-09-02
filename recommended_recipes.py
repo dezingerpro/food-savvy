@@ -5,8 +5,8 @@ import sys
 import json
 
 # Update these with your actual API endpoints
-api_url_all_recipes = 'http://13.214.60.179:2000/api/get_allrecipe'
-api_url_last_viewed = 'http://13.214.60.179:2000/api/getLastViewedRecipes'
+api_url_all_recipes = 'http://192.168.18.108:2000/api/get_allrecipe'
+api_url_last_viewed = 'http://192.168.18.108:2000/api/getLastViewedRecipes'
 
 # User ID to fetch last viewed recipes
 user_id = sys.argv[1]

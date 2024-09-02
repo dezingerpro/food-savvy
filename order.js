@@ -6,6 +6,12 @@ const orderSchema = new mongoose.Schema({
         required: true,
         ref: 'User' // Assuming 'User' is your user model name
     },
+    orderTotal:{
+        type:String
+    },
+    paidStatus:{
+        type:String
+    },
     items: [{
         itemName: { type: String, required: true },
         quantity: { type: Number, required: true, min: 1 }

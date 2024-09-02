@@ -122,11 +122,11 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
 
         // create a new order
         app.post('/api/orders', async (req, res) => {
-            const { userId, items } = req.body;
+            const { userId, items, orderTotal,paidStatus } = req.body;
             console.log(req.body);
             try {
                 // Create and save the new order
-                const newOrder = new Order({ userId, items });
+                const newOrder = new Order({ userId, items,orderTotal,paidStatus });
                 const savedOrder = await newOrder.save();
 
                 // Optionally, update the user document with the new order ID
@@ -406,7 +406,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
             }
 
             // Spawn a child process to run the Python script
-            const pythonProcess = spawn('python3', ['./recommended_recipes.py', userId]);
+            const pythonProcess = spawn('python', ['./recommended_recipes.py', userId]);
 
             // Collect data from script
             let dataString = '';
@@ -448,7 +448,7 @@ mongoose.connect("mongodb+srv://abiali:abiali5253@foodsavvy.6erqsvj.mongodb.net/
         //pythoncodetosearch
         app.post('/api/search_recipes', (req, res) => {
             const ingredients = req.body.ingredients;
-            const pythonProcess = spawn('python3', ['./ingredientSearch.py', ingredients]);
+            const pythonProcess = spawn('python', ['./ingredientSearch.py', ingredients]);
             let dataString = '';
             //console.log(pythonProcess);
 
